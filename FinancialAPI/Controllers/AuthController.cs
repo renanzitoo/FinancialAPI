@@ -1,7 +1,9 @@
-﻿using FinancialAPI.Context;
+﻿using System.Security.Claims;
+using FinancialAPI.Context;
 using FinancialAPI.DTOs.Requests;
 using FinancialAPI.Entities;
 using FinancialAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinancialAPI.Controllers;
@@ -54,5 +56,43 @@ public class AuthController : ControllerBase
             user.Email
         });
         
+    }
+
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginRequestDTO dto)
+    {
+        if(!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        var user = _appDbContext.Users.FirstOrDefault(u => u.Email == dto.Email);
+        if(user is null)
+            return Unauthorized("Invalid email or password.");
+
+        var passwordValid = _passwordService.Verify(
+            user.PasswordHash,
+            dto.Password);
+        
+        if(!passwordValid)
+            return Unauthorized("Invalid email or password.");
+        
+        var authResponse = _jwtService.GenerateToken(user);
+        
+        return Ok(authResponse);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var name = User.FindFirstValue(ClaimTypes.Name);
+
+        return Ok(new
+        {
+            Id = id,
+            Name = name,
+            Email = email
+        });
     }
 }
