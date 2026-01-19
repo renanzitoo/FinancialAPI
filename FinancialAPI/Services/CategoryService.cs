@@ -9,27 +9,29 @@ namespace FinancialAPI.Services;
 
 public class CategoryService : ICategoryService
 {
+    private readonly ICurrentUserService _currentUser;
     private readonly AppDbContext _context;
-    private readonly  JwtService _jwtService;
 
-    public CategoryService(AppDbContext context, JwtService jwtService)
+    public CategoryService(ICurrentUserService currentUser, AppDbContext context)
     {
+        _currentUser = currentUser;
         _context = context;
-        _jwtService = jwtService;
     }
 
-    public async Task<Guid> CreateCategoryAsync(CategoryRequestDTO dto, Guid userId)
-    {
-       var category = dto.ToEntity(userId);
-       
-       _context.Categories.Add(category);
-       await _context.SaveChangesAsync();
-       
-       return category.Id;
+    public async Task<Guid> CreateCategoryAsync(CategoryRequestDTO dto)
+    { 
+        var userId = _currentUser.UserId; 
+        var category = dto.ToEntity(userId);
+        _context.Categories.Add(category);
+        await _context.SaveChangesAsync();
+        
+        return category.Id;
     }
     
-    public async Task<IEnumerable<CategoryResponseDTO>> GetAllCategoriesAsync(Guid userId)
+    public async Task<IEnumerable<CategoryResponseDTO>> GetAllCategoriesAsync()
     {
+        var userId = _currentUser.UserId;
+        
         return await _context.Categories
             .AsNoTracking()
             .Where(c => c.UserId == userId)
@@ -38,8 +40,10 @@ public class CategoryService : ICategoryService
             .ToListAsync();
     }
     
-    public async Task<bool> DeleteCategoryAsync(Guid categoryId, Guid userId)
+    public async Task<bool> DeleteCategoryAsync(Guid categoryId)
     {
+        var userId = _currentUser.UserId;
+        
         var category = await _context.Categories
             .FirstOrDefaultAsync(c => c.Id == categoryId && c.UserId == userId);
         
@@ -50,6 +54,34 @@ public class CategoryService : ICategoryService
         await _context.SaveChangesAsync();
         
         return true;
+    }
+    
+    public async Task<CategoryResponseDTO>? GetCategoryByIdAsync(Guid categoryId)
+    {
+        var userId = _currentUser.UserId;
+    
+        var category = await _context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == categoryId && c.UserId == userId);
+        
+        return category?.ToResponseDTO()!;
+    }
+
+    public async Task<CategoryResponseDTO>? UpdateCategoryAsync(Guid categoryId, CategoryRequestDTO dto)
+    {
+        var userId = _currentUser.UserId;
+        var oldCategory = await _context.Categories
+            .FirstOrDefaultAsync(c => c.Id == categoryId && c.UserId == userId);
+        
+        if (oldCategory is null)
+            return null;
+        
+        var updatedCategory = dto.ToEntity(userId);
+        updatedCategory.Id = oldCategory.Id;
+        
+        _context.Entry(oldCategory).CurrentValues.SetValues(updatedCategory);
+        await _context.SaveChangesAsync();
+        return updatedCategory.ToResponseDTO();
     }
     
 }

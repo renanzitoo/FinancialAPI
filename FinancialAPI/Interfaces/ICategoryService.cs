@@ -5,7 +5,9 @@ namespace FinancialAPI.Interfaces;
 
 public interface ICategoryService
 {
-    Task<Guid> CreateCategoryAsync(CategoryRequestDTO dto, Guid id);
-    Task<bool> DeleteCategoryAsync(Guid categoryId,  Guid userId);
-    Task<IEnumerable<CategoryResponseDTO>> GetAllCategoriesAsync(Guid userId);
+    Task<Guid> CreateCategoryAsync(CategoryRequestDTO dto);
+    Task<bool> DeleteCategoryAsync(Guid categoryId);
+    Task<IEnumerable<CategoryResponseDTO>> GetAllCategoriesAsync();
+    Task<CategoryResponseDTO>? GetCategoryByIdAsync(Guid categoryId);
+    Task<CategoryResponseDTO>? UpdateCategoryAsync(Guid categoryId, CategoryRequestDTO dto);
 };

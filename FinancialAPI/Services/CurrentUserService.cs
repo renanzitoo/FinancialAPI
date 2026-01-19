@@ -6,28 +6,31 @@ namespace FinancialAPI.Services;
 
 public class CurrentUserService : ICurrentUserService
 {
-    public Guid UserId { get;}
-    public bool IsAuthenticated { get; }
+    private readonly ClaimsPrincipal? _user;
 
     public CurrentUserService(IHttpContextAccessor httpContextAccessor)
     {
-        var user = httpContextAccessor.HttpContext?.User;
-        
-        IsAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+        _user = httpContextAccessor.HttpContext?.User;
+    }
 
-        if (!IsAuthenticated)
+    public bool IsAuthenticated =>
+        _user?.Identity?.IsAuthenticated == true;
+
+    public Guid UserId
+    {
+        get
         {
-            UserId = Guid.Empty;
-            return;
+            if (!IsAuthenticated)
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var userIdClaim =
+                _user!.FindFirst(ClaimTypes.NameIdentifier) ??
+                _user.FindFirst(JwtRegisteredClaimNames.Sub);
+
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException("UserId claim not found.");
+
+            return Guid.Parse(userIdClaim.Value);
         }
-        
-        var userIdClaim = 
-            user.FindFirst(ClaimTypes.NameIdentifier) ?? 
-            user.FindFirst(JwtRegisteredClaimNames.Sub);
-        
-        UserId = userIdClaim != null
-            ? Guid.Parse(userIdClaim.Value)
-            : Guid.Empty;
-        
     }
 }

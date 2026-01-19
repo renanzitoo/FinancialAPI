@@ -1,7 +1,7 @@
 ﻿namespace FinancialAPI.Interfaces;
 
-public class ICurrentUserService
+public interface ICurrentUserService
 {
-    private Guid UserId { get; }
+    Guid UserId { get; }
     bool IsAuthenticated { get; }
 }

@@ -32,7 +32,7 @@ public class CategoryController : ControllerBase
         if(userId is null)
             return Unauthorized();
 
-        var result = await _service.CreateCategoryAsync(dto, new Guid(userId));
+        var result = await _service.CreateCategoryAsync(dto);
         return CreatedAtAction(nameof(Create), new { id = result }, result);
     }
 
@@ -40,9 +40,8 @@ public class CategoryController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         
-        var deleted = await _service.DeleteCategoryAsync(id,new Guid(userId));
+        var deleted = await _service.DeleteCategoryAsync(id);
         
         if (!deleted)
             return NotFound();
@@ -54,12 +53,27 @@ public class CategoryController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
-        var result = await _service.GetAllCategoriesAsync(new Guid(userId));
+        var result = await _service.GetAllCategoriesAsync();
         return Ok(result);
     }
-    
-    
+
+    [Authorize]
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var result = await _service.GetCategoryByIdAsync(id)!;
+        if(result.Equals(null))
+            return NotFound();
+        
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, CategoryRequestDTO dto)
+    {
+        var result = await _service.UpdateCategoryAsync(id, dto)!;
+        return Ok(result);
+    }
     
 }
