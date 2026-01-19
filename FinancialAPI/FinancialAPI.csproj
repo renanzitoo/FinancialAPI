@@ -25,9 +25,7 @@
 
     <ItemGroup>
       <Folder Include="Data\" />
-      <Folder Include="DTOs\Requests\Transactions\" />
       <Folder Include="Infrastructure\" />
-      <Folder Include="Mappings\" />
       <Folder Include="Repositories\" />
     </ItemGroup>
 

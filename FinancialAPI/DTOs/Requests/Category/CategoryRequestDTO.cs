@@ -1,3 +1,9 @@
-﻿namespace FinancialAPI.DTOs.Requests.Category;
+﻿using System.ComponentModel.DataAnnotations;
 
-public record CategoryRequestDTO();
+namespace FinancialAPI.DTOs.Requests.Category;
+
+public record CategoryRequestDTO
+{
+    [Required]
+    public string Name { get; set; }
+};

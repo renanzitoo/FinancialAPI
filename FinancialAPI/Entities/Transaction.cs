@@ -6,7 +6,11 @@ public class Transaction
     public Guid UserId { get; set; }
     public Guid CategoryId { get; set; }
     
-    public int Amount { get; set; }
+    public User User { get; set; }
+    public Category Category { get; set; }
+    
+    public string Title { get; set; }
+    public long AmountInCents { get; set; }
     public string Description { get; set; }
     
     public DateTime Date { get; set; }

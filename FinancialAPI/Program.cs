@@ -1,5 +1,6 @@
 using System.Text;
 using FinancialAPI.Context;
+using FinancialAPI.Interfaces;
 using FinancialAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -36,6 +37,8 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+
 
 builder.Services.AddAuthorization();
 
