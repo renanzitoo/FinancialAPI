@@ -35,6 +35,20 @@ public class CategoryController : ControllerBase
         var result = await _service.CreateCategoryAsync(dto, new Guid(userId));
         return CreatedAtAction(nameof(Create), new { id = result }, result);
     }
+
+    [Authorize]
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var deleted = await _service.DeleteCategoryAsync(id,new Guid(userId));
+        
+        if (!deleted)
+            return NotFound();
+        
+        return NoContent();
+    }
     
     
     

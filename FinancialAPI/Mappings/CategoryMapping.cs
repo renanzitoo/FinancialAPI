@@ -16,7 +16,7 @@ public static class CategoryMapping
         };
     }
     
-    public static CategoryResponseDTO ToResponseDTO(Category entity)
+    public static CategoryResponseDTO ToResponseDTO(this Category entity)
     {
         return new CategoryResponseDTO
         {
