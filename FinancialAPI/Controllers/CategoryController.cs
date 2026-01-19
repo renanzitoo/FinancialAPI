@@ -49,6 +49,16 @@ public class CategoryController : ControllerBase
         
         return NoContent();
     }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var result = await _service.GetAllCategoriesAsync(new Guid(userId));
+        return Ok(result);
+    }
     
     
     
