@@ -32,4 +32,31 @@ public class TransactionController : ControllerBase
         var result = await _service.CreateTransactionAsync(dto);
         return CreatedAtAction(nameof(Create), new { id = result }, result);
     }
+    
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetUserTransactions()
+    {
+        var result = await _service.GetUserTransactionsAsync();
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetTransactionDetails(Guid id)
+    {
+        var result = await _service.GetTransactionDetailsAsync(id);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("/by-date")]
+    public async Task<IActionResult> GetTransactionsByDateInterval([FromBody]DateTime fromDate, [FromBody]DateTime toDate)
+    {
+        if(!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        var result = await _service.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        return Ok(result);
+    }
 }

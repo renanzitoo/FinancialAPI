@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using FinancialAPI.Context;
 using FinancialAPI.DTOs.Requests.Transactions;
+using FinancialAPI.DTOs.Responses.Transaction;
 using FinancialAPI.Entities;
 using FinancialAPI.Interfaces;
 using FinancialAPI.Mappings;
@@ -33,13 +34,104 @@ public class TransactionService : ITransactionService
         if(!categoryExists)
             throw new Exception("Category does not exist.");
         
+        dto.Date ??= DateTime.UtcNow;
+        
         var transaction = dto.ToEntity(userId);
-        transaction.Category = _context.Categories.Find(dto.CategoryId);
-        transaction.User = _context.Users.Find(userId);
         
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
         
         return transaction.Id;
     }
+
+    public async Task<TransactionDetailsResponseDTO> GetTransactionDetailsAsync(Guid transactionId)
+    {
+        var userId = _currentUser.UserId;
+
+        var transaction = await _context.Transactions
+            .Include(t => t.Category)
+            .FirstOrDefaultAsync(t => t.Id == transactionId && t.UserId == userId);
+
+        if (transaction == null)
+            throw new Exception("Transaction not found.");
+
+        return transaction.ToDetailsDto();
+    }
+
+    public async Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByCategoryAsync(Guid categoryId)
+    {
+        var userId = _currentUser.UserId;
+        
+        var transactionsList = await _context.Transactions.
+            Where(c=> c.UserId == userId && c.CategoryId == categoryId)
+            .Include(t => t.Category)
+            .ToListAsync();
+        return transactionsList.Select(t => t.ToListDto());
+    }
+
+    public async Task<IEnumerable<TransactionListResponseDTO>> GetUserTransactionsAsync()
+    {
+        var userId = _currentUser.UserId;
+
+        var transactionsList = await _context.Transactions
+            .Where(c => c.UserId == userId)
+            .Include(t => t.Category)
+            .ToListAsync();
+        return transactionsList.Select(t => t.ToListDto());
+    }
+    
+    public async Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var userId = _currentUser.UserId;
+
+        var transactionsList = await _context.Transactions
+            .Where(c => c.UserId == userId && c.Date >= startDate && c.Date <= endDate)
+            .Include(t => t.Category)
+            .ToListAsync();
+        return transactionsList.Select(t => t.ToListDto());
+    }
+    
+    public async Task<bool> DeleteTransactionAsync(Guid transactionId)
+    {
+        var userId = _currentUser.UserId;
+
+        var transaction = await _context.Transactions
+            .FirstOrDefaultAsync(t => t.Id == transactionId && t.UserId == userId);
+
+        if (transaction == null)
+            return false;
+
+        _context.Transactions.Remove(transaction);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<Guid> UpdateTransactionAsync(Guid transactionId, UpdateTransactionRequestDTO dto)
+    {
+        var userId = _currentUser.UserId;
+
+        var transaction = await _context.Transactions
+            .FirstOrDefaultAsync(t => t.Id == transactionId && t.UserId == userId);
+
+        if (transaction == null)
+            throw new Exception("Transaction not found.");
+
+        var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId && c.UserId == userId);
+
+        if (!categoryExists)
+            throw new Exception("Category does not exist.");
+
+        transaction.Title = dto.Title;
+        transaction.Description = dto.Description;
+        transaction.AmountInCents = dto.AmountInCents;
+        transaction.Type = dto.Type;
+        transaction.CategoryId = dto.CategoryId;
+        
+        _context.Transactions.Update(transaction);
+        await _context.SaveChangesAsync();
+        
+        return transaction.Id;
+    }
+
 }

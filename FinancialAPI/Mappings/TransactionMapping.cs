@@ -20,7 +20,7 @@ public static class TransactionMapping
             Description = dto.Description,
             AmountInCents = dto.AmountInCents,
             Type = dto.Type,
-            Date = DateTime.UtcNow,
+            Date = dto.Date ?? DateTime.Now,
         };
     }
 
@@ -32,6 +32,21 @@ public static class TransactionMapping
         {
             Id = transaction.Id,
             AmountInCents = transaction.AmountInCents,
+            TransactionType = transaction.Type.ToString(),
+            Date = transaction.Date,
+            CategoryName = transaction.Category.Name
+        };
+    }
+    
+    public static TransactionDetailsResponseDTO ToDetailsDto(
+        this Transaction transaction
+    )
+    {
+        return new TransactionDetailsResponseDTO
+        {
+            Id = transaction.Id,
+            AmountInCents = transaction.AmountInCents,
+            Description = transaction.Description,
             TransactionType = transaction.Type.ToString(),
             Date = transaction.Date,
             CategoryName = transaction.Category.Name
