@@ -20,7 +20,7 @@ public static class TransactionMapping
             Description = dto.Description,
             AmountInCents = dto.AmountInCents,
             Type = dto.Type,
-            Date = DateTime.UtcNow
+            Date = DateTime.UtcNow,
         };
     }
 

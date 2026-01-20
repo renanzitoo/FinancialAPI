@@ -10,26 +10,32 @@ namespace FinancialAPI.Services;
 
 public class TransactionService : ITransactionService
 {
+    private readonly ICurrentUserService _currentUser;
     private readonly AppDbContext _context;
-    private readonly JwtService _jwtService;
     
     public TransactionService(
         AppDbContext context,
-        JwtService jwtService
-    )
+        ICurrentUserService currentUser
+        )
     {
         _context = context;
-        _jwtService = jwtService;
+        _currentUser = currentUser;
     }
     
-    public async Task<Guid> CreateTransactionAsync(TransactionRequestDTO dto, Guid userId)
+    public async Task<Guid> CreateTransactionAsync(TransactionRequestDTO dto)
     {
+        var userId = _currentUser.UserId;
+        if(userId == Guid.Empty)
+            throw new Exception("User not found.");
+        
         var categoryExists = await _context.Categories.AnyAsync(c => c.Id == dto.CategoryId && c.UserId == userId);
         
         if(!categoryExists)
             throw new Exception("Category does not exist.");
         
         var transaction = dto.ToEntity(userId);
+        transaction.Category = _context.Categories.Find(dto.CategoryId);
+        transaction.User = _context.Users.Find(userId);
         
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();

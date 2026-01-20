@@ -6,6 +6,6 @@ namespace FinancialAPI.Interfaces;
 
 public interface ITransactionService
 {
-    Task<Guid> CreateTransactionAsync(TransactionRequestDTO dto, Guid userId);
+    Task<Guid> CreateTransactionAsync(TransactionRequestDTO dto);
     
 }

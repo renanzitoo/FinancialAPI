@@ -40,6 +40,8 @@ builder.Services.AddScoped<PasswordService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
 
 
 builder.Services.AddAuthorization();

@@ -19,4 +19,5 @@ public record TransactionRequestDTO
     public TransactionType Type { get; set; }
     
     public string? Description { get; set; }
+    
 };
