@@ -49,6 +49,7 @@ public class TransactionService : ITransactionService
         var userId = _currentUser.UserId;
 
         var transaction = await _context.Transactions
+            .AsNoTracking()
             .Include(t => t.Category)
             .FirstOrDefaultAsync(t => t.Id == transactionId && t.UserId == userId);
 
@@ -62,8 +63,9 @@ public class TransactionService : ITransactionService
     {
         var userId = _currentUser.UserId;
         
-        var transactionsList = await _context.Transactions.
-            Where(c=> c.UserId == userId && c.CategoryId == categoryId)
+        var transactionsList = await _context.Transactions
+            .AsNoTracking()
+            .Where(c=> c.UserId == userId && c.CategoryId == categoryId)
             .Include(t => t.Category)
             .ToListAsync();
         return transactionsList.Select(t => t.ToListDto());
@@ -74,16 +76,28 @@ public class TransactionService : ITransactionService
         var userId = _currentUser.UserId;
 
         var transactionsList = await _context.Transactions
+            .AsNoTracking()
             .Where(c => c.UserId == userId)
             .Include(t => t.Category)
             .ToListAsync();
         return transactionsList.Select(t => t.ToListDto());
     }
     
-    public async Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByDateRangeAsync(DateTime startDate, DateTime endDate)
+    public async Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByDateRangeAsync(DateRangeTransactionsRequestDTO dto)
     {
         var userId = _currentUser.UserId;
+        
+        if (!dto.From.HasValue || !dto.To.HasValue)
+            throw new Exception("Date range is required.");
+        
+        if(dto.From>dto.To)
+            throw new Exception("Invalid date range. 'From' date must be earlier than 'To' date.");
 
+        
+        var startDate = dto.From.Value.Date;
+        var endDate = dto.To.Value.Date.AddDays(1).AddTicks(-1);
+        
+        
         var transactionsList = await _context.Transactions
             .Where(c => c.UserId == userId && c.Date >= startDate && c.Date <= endDate)
             .Include(t => t.Category)
@@ -133,5 +147,57 @@ public class TransactionService : ITransactionService
         
         return transaction.Id;
     }
+    
+    public async Task<TransactionsSumaryDTO> GetUserSummaryAsync()
+    {
+        var userId = _currentUser.UserId;
+
+        var incomeTotal = await _context.Transactions
+            .Where(t => t.UserId == userId && t.Type == TransactionType.Income)
+            .SumAsync(t => (long?)t.AmountInCents) ?? 0;
+
+        var expenseTotal = await _context.Transactions
+            .Where(t => t.UserId == userId && t.Type == TransactionType.Expense)
+            .SumAsync(t => (long?)t.AmountInCents) ?? 0;
+
+        var balance = incomeTotal - expenseTotal;
+
+        return new TransactionsSumaryDTO
+        {
+            TotalIncomeInCents = incomeTotal,
+            TotalExpenseInCents = expenseTotal,
+            NetBalanceInCents = balance
+        };
+    }
+    
+    public async Task<TransactionsSumaryDTO> GetUserMonthSummaryAsync(int year, int month)
+    {
+        var userId = _currentUser.UserId;
+        
+        var startDate = new DateTime(year, month, 1);
+        var endDate = startDate.AddMonths(1);
+
+        var incomeTotal = await _context.Transactions
+            .Where(t => t.UserId == userId && t.Type == TransactionType.Income &&
+                        t.Date >= startDate &&
+                        t.Date < endDate)
+            .SumAsync(t => (long?)t.AmountInCents) ?? 0;
+
+        var expenseTotal = await _context.Transactions
+            .Where(t => t.UserId == userId && t.Type == TransactionType.Expense&&
+                        t.Date >= startDate &&
+                        t.Date < endDate)
+            .SumAsync(t => (long?)t.AmountInCents) ?? 0;
+
+        var balance = incomeTotal - expenseTotal;
+
+        return new TransactionsSumaryDTO
+        {
+            TotalIncomeInCents = incomeTotal,
+            TotalExpenseInCents = expenseTotal,
+            NetBalanceInCents = balance
+        };
+    }
+
 
 }

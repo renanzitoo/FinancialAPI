@@ -23,6 +23,21 @@ public static class TransactionMapping
             Date = dto.Date ?? DateTime.Now,
         };
     }
+    
+    public static Transaction ToEntity(
+        this UpdateTransactionRequestDTO dto,
+        Transaction existingTransaction
+    )
+    {
+        existingTransaction.Title = dto.Title;
+        existingTransaction.CategoryId = dto.CategoryId;
+        existingTransaction.AmountInCents = dto.AmountInCents;
+        existingTransaction.Type = dto.Type;
+        existingTransaction.Description = dto.Description;
+        existingTransaction.Date = dto.Date;
+
+        return existingTransaction;
+    }
 
     public static TransactionListResponseDTO ToListDto(
         this Transaction transaction
@@ -31,6 +46,7 @@ public static class TransactionMapping
         return new TransactionListResponseDTO
         {
             Id = transaction.Id,
+            Name = transaction.Title,
             AmountInCents = transaction.AmountInCents,
             TransactionType = transaction.Type.ToString(),
             Date = transaction.Date,

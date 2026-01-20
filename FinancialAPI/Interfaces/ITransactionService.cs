@@ -11,6 +11,8 @@ public interface ITransactionService
     Task<IEnumerable<TransactionListResponseDTO>> GetUserTransactionsAsync();
     Task<bool> DeleteTransactionAsync(Guid transactionId);
     Task<Guid> UpdateTransactionAsync(Guid transactionId, UpdateTransactionRequestDTO dto);
-    Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByDateRangeAsync(DateTime startDate, DateTime endDate);
+    Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByDateRangeAsync(DateRangeTransactionsRequestDTO dto);
     Task<IEnumerable<TransactionListResponseDTO>> GetTransactionsByCategoryAsync(Guid categoryId);
+    Task<TransactionsSumaryDTO> GetUserSummaryAsync();
+    Task<TransactionsSumaryDTO> GetUserMonthSummaryAsync(int month, int year);
 }

@@ -24,10 +24,6 @@ public class TransactionController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
         
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId is null)
-            return Unauthorized();
         
         var result = await _service.CreateTransactionAsync(dto);
         return CreatedAtAction(nameof(Create), new { id = result }, result);
@@ -50,13 +46,58 @@ public class TransactionController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("/by-date")]
-    public async Task<IActionResult> GetTransactionsByDateInterval([FromBody]DateTime fromDate, [FromBody]DateTime toDate)
+    [HttpGet("by-date")]
+    public async Task<IActionResult> GetTransactionsByDateInterval([FromQuery]DateRangeTransactionsRequestDTO dto)
     {
         if(!ModelState.IsValid)
             return BadRequest(ModelState);
         
-        var result = await _service.GetTransactionsByDateRangeAsync(fromDate, toDate);
+        var result = await _service.GetTransactionsByDateRangeAsync(dto);
         return Ok(result);
     }
+
+    [Authorize]
+    [HttpGet("by-category/{categoryId:guid}")]
+    public async Task<IActionResult> GetTransactionsByCategory(Guid categoryId)
+    {
+        var result = await _service.GetTransactionsByCategoryAsync(categoryId);
+        return Ok(result);  
+    }
+
+    [Authorize]
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateTransaction(Guid id, [FromBody] UpdateTransactionRequestDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        var result = await _service.UpdateTransactionAsync(id, dto);
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteTransaction(Guid id)
+    {
+        var result = await _service.DeleteTransactionAsync(id);
+        if (!result)
+            return NotFound();
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetUserSummary()
+    {
+        var result = await _service.GetUserSummaryAsync();
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpGet("summary/{year:int}/{month:int}")]
+    public async Task<IActionResult> GetUserSummaryByMonth(int year, int month)
+    {
+        var result = await _service.GetUserMonthSummaryAsync(year, month);
+        return Ok(result);
+    }
+    
 }
